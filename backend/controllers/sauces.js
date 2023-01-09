@@ -36,37 +36,67 @@ function deleteSauce (req, res){
   const { id } = req.params
   Product.findByIdAndDelete(id)
 //.then (deleteImage)
-  .then ((product) => res.send({message: product}))
-  .catch((err) => res.status (500).send({message: err}))
-}
+  .then ((product) => sendClientResponse (product, res))
+  .then((item) => deleteImage(item))
+  .then((res) => console.log("File delted", res))
+  .catch((err) => res.status(500).send({message: err}))
 
-/*Suppression de l'image
-function deleteImage (product){
-  const {imageUrl} = product
-  const fileToDelete = imageUrl.split("/").at(-1)
-  unlink(`images/${fileToDelete}`).then(() => product)
-}*/
+}
 
 //Modification de la sauce
 function modifySauce(req, res) {
   const {
     params: {id}
   } = req
-  const {body} = req  
-  console.log("body et params:", body, id)
+ 
+  console.log("req.file", req.file)
 
-Product.findByIdAndUpdate(id, body)
+  const hasNewImage = req.file != null
+  const payload = makePayload(hasNewImage, req)
+  if (!hasNewImage) payload = req.body
+  console.log("hasNewImage:", hasNewImage)
+
+  Product.findByIdAndUpdate(id, payload)
   .then ((dbResponse) => sendClientResponse (dbResponse, res))
-  .catch((err) => console.error ("probleme and updatin:", err))
-  }
-// Fonctin réponse au client en fonction de la base de données
-function sendClientResponse (dbResponse,res){
-  if (dbResponse == null) {
-    console.log("find one and update:", res)
-    res.status(200).send({message: "object not find in database"})
-} 
+  .then((product) => deleteImage(product))
+  .then((res) => console.log("File delted", res))
+  .catch((err) => console.error ("probleme and updatin", err))
+}
+
+//Suppression de l'image
+function deleteImage (product){
+ // const {imageUrl} = product
+ // const fileToDelete = imageUrl.split("/").at(-1)
+  if (product == null) return
+  console.log("delete image", product)
+  const imageToDelete = product.imageUrl.split("/").at(-1)  
+  return unlink("images/" +  imageToDelete)
+
+}
+
+//Confirmation de la bonne insertion de la nouvelle image
+function makePayload (hasNewImage, req) {
+  console.log("hasNewImage:", hasNewImage)
+  if (!hasNewImage) return req.body
+  const payload = JSON.parse (req.body.sauce)
+  payload.imageUrl = makeImageUrl (req, req.file.fileName)
+  console.log("nouvelle image à gérer")
+  console.log("voici le payload:", payload)
+  return payload
+}
+
+// Fonction réponse au client en fonction de la base de données
+function sendClientResponse (product, res){
+  if (product == null) {
     console.log("nothin to update")
-    res.status(404).send ({message: "succesfully updated"})
+    return res.status(404).send({message:"object not find in database"})
+  } 
+    console.log("all good to update:", product)
+    return Promise.resolve(res.status(200).send({message: "succesfully updated"})).then(() => product)
+}
+
+function makeImageUrl(req, fileName) {
+    return req.protocol + "://" + req.get("host") + "/images/" + fileName
   }
 
 //Création du produit sauce à partir du shéma
@@ -77,9 +107,7 @@ function createSauce(req, res) {
   const {name, manufacturer, description, mainPepper, heat, userId } = sauce
 
 //Insertion de l'image
-  function makeImageUrl(req, fileName) {
-    return req.protocol + "://" + req.get("host") + "/images/" + fileName
-  }
+ 
   const product = new Product({
     userId: userId,
     name: name,
