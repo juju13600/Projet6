@@ -23,6 +23,7 @@ function getSauces(req, res) {
   .then(products=> res.send(products))
   .catch(error => res.status (500).send(error))
 }
+
 //Création de la fiche produit de la sauce
 function getSauceById (req, res){
   const { id } = req.params
@@ -34,20 +35,40 @@ function getSauceById (req, res){
 function deleteSauce (req, res){
   const { id } = req.params
   Product.findByIdAndDelete(id)
-  .then (deleteImage)
+//.then (deleteImage)
   .then ((product) => res.send({message: product}))
   .catch((err) => res.status (500).send({message: err}))
 }
-//Suppression de l'image
+
+/*Suppression de l'image
 function deleteImage (product){
   const {imageUrl} = product
   const fileToDelete = imageUrl.split("/").at(-1)
-  unlink(`images/${fileToDelete}`, (err) =>{ 
-    console.log("suppression du fichier", err)
-    throw new Error ("Problème de à la suppression de l'image"+ err)
-  })
-  return product
-}
+  unlink(`images/${fileToDelete}`).then(() => product)
+}*/
+
+//Modification de la sauce
+function modifySauce(req, res) {
+  const {
+    params: {id}
+  } = req
+  const {body} = req  
+  console.log("body et params:", body, id)
+
+Product.findByIdAndUpdate(id, body)
+  .then ((dbResponse) => sendClientResponse (dbResponse, res))
+  .catch((err) => console.error ("probleme and updatin:", err))
+  }
+// Fonctin réponse au client en fonction de la base de données
+function sendClientResponse (dbResponse,res){
+  if (dbResponse == null) {
+    console.log("find one and update:", res)
+    res.status(200).send({message: "object not find in database"})
+} 
+    console.log("nothin to update")
+    res.status(404).send ({message: "succesfully updated"})
+  }
+
 //Création du produit sauce à partir du shéma
 function createSauce(req, res) {
   const {body, file} = req
@@ -78,4 +99,4 @@ function createSauce(req, res) {
     .catch((err) => res.status(500).send(err))
 }
 
-module.exports = {getSauces, createSauce, getSauceById, deleteSauce}
+module.exports = {getSauces, createSauce, getSauceById, deleteSauce, modifySauce}

@@ -2,6 +2,7 @@ const { User } = require("../mongo")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 
+//Fonction de création de l'utilisateur (signup)
 async function createUser(req, res) {
   try {
     const { email, password } = req.body
@@ -14,11 +15,13 @@ async function createUser(req, res) {
   }
 }
 
+//Hashage du mot de passe de connexion
 function hashPassword(password) {
   const saltRounds = 10
   return bcrypt.hash(password, saltRounds)
 }
 
+//Création de la fonction pour se loger sur le site (login)
 async function logUser(req, res) {
   try {
     const email = req.body.email
@@ -37,6 +40,7 @@ async function logUser(req, res) {
   }
 }
 
+//Création du token
 function createToken(email) {
   const jwtPassword = process.env.JWT_PASSWORD
   return jwt.sign({ email: email }, jwtPassword, { expiresIn: '1h' })

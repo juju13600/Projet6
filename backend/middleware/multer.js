@@ -7,12 +7,12 @@ const storage = multer.diskStorage({
     }
   })
   
-  function makeFilename(req, file) {
+function makeFilename(req, file) {
     console.log("req, file:", file)
     const fileName = `${Date.now()}-${file.originalname}`.replace(/\s/g, "-")
     file.fileName = fileName
     return fileName
-  }
-  const upload =  multer ({ storage })
+}
+const upload =  multer ({ storage })
 
   module.exports = {upload}

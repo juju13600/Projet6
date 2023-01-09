@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken")
 
+//Authentification de l'utilisateur avec le token
 function authenticateUser(req, res, next) {
   console.log("authenticate user")
   const header = req.header("Authorization")
