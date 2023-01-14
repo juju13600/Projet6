@@ -9,20 +9,21 @@ const productSchema = new mongoose.Schema({
   description: String,
   mainPepper: String,
   imageUrl: String,
-  heat: { type: Number, min: 1, max: 5 },
+  heat: { type: Number, min: 1, max: 10 },
   likes: Number,
   dislikes: Number,
   usersLiked: [String],
   usersDisliked: [String]
 })
 const Product = mongoose.model("Product", productSchema)
-  
+
+// Afficher toutes les sauces
 function getSauces(req, res) {
   Product.find({})
   .then((products)=> res.send(products))
   .catch((error) => res.status (500).send(error))
 }
-
+//Afficher une seule sauce
 function getSauce(req, res) {
   const { id } = req.params
   return Product.findById(id)
@@ -91,6 +92,7 @@ function sendClientResponse (product, res){
     return Promise.resolve(res.status(200).send(product)).then(() => product)
 }
 
+//Insertion de l'image
 function makeImageUrl(req, fileName) {
     return req.protocol + "://" + req.get("host") + "/images/" + fileName
   }
@@ -102,7 +104,6 @@ function createSauce(req, res) {
   const {fileName} = file
   const {name, manufacturer, description, mainPepper, heat, userId } = sauce
 
-//Insertion de l'image
  
   const product = new Product({
     userId: userId,
@@ -122,7 +123,7 @@ function createSauce(req, res) {
     .then((message) => res.status(201).send({ message }))
     .catch((err) => res.status(500).send(err))
 }
-
+//Création du vote
 function likeSauce(req, res) {
   const { like, userId } = req.body
   if (![1, -1, 0].includes(like)) return res.status(403).send({ message: "Invalid like value" })
@@ -133,12 +134,12 @@ function likeSauce(req, res) {
     .then((prod) => sendClientResponse(prod, res))
     .catch((err) => res.status(500).send(err))
 }
-
+// Mise à jour des votes
 function updateVote(product, like, userId, res) {
   if (like === 1 || like === -1) return incrementVote(product, userId, like)
   return resetVote(product, userId, res)
 }
-
+// Annulation du vote
 function resetVote(product, userId, res) {
   const { usersLiked, usersDisliked } = product
   if ([usersLiked, usersDisliked].every((arr) => arr.includes(userId)))
@@ -157,7 +158,7 @@ function resetVote(product, userId, res) {
 
   return product
 }
-
+// Like et Dislike
 function incrementVote(product, userId, like) {
   const { usersLiked, usersDisliked } = product
 

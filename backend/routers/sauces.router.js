@@ -1,3 +1,4 @@
+//Importation packages et middleware
 const express = require ("express")
 const {getSauces, createSauce, getSauceById, deleteSauce, modifySauce, likeSauce} = require("../controllers/sauces")
 const{authenticateUser} = require("../middleware/auth")
@@ -8,6 +9,7 @@ const bodyParser = require("body-parser")
 saucesRouter.use(bodyParser.json())
 saucesRouter.use(authenticateUser)
 
+//CRUD
 saucesRouter.get("/", getSauces)
 saucesRouter.post("/", upload.single("image"), createSauce)
 saucesRouter.get("/:id", getSauceById)
