@@ -1,5 +1,4 @@
 const mongoose = require("mongoose")
-const { authenticateUser } = require("../middleware/auth")
 const { unlink } = require("fs/promises")
 
 //Création du shéma sur mongoose
@@ -20,25 +19,28 @@ const Product = mongoose.model("Product", productSchema)
   
 function getSauces(req, res) {
   Product.find({})
-  .then(products=> res.send(products))
-  .catch(error => res.status (500).send(error))
+  .then((products)=> res.send(products))
+  .catch((error) => res.status (500).send(error))
 }
 
+function getSauce(req, res) {
+  const { id } = req.params
+  return Product.findById(id)
+}
 //Création de la fiche produit de la sauce
 function getSauceById (req, res){
-  const { id } = req.params
-  Product.findById(id)
-  .then (product => res.send(product))
-  .catch(console.error)
+  getSauce (req,res)
+  .then ((product) => sendClientResponse(product, res))
+  .catch((err) => res.status(500).send(err))
 }
+
 //Supression de la sauce
 function deleteSauce (req, res){
   const { id } = req.params
   Product.findByIdAndDelete(id)
-//.then (deleteImage)
-  .then ((product) => sendClientResponse (product, res))
+  .then((product) => sendClientResponse (product, res))
   .then((item) => deleteImage(item))
-  .then((res) => console.log("File delted", res))
+  .then((res) => console.log("File deleted", res))
   .catch((err) => res.status(500).send({message: err}))
 
 }
@@ -49,24 +51,18 @@ function modifySauce(req, res) {
     params: {id}
   } = req
  
-  console.log("req.file", req.file)
-
   const hasNewImage = req.file != null
   const payload = makePayload(hasNewImage, req)
-  if (!hasNewImage) payload = req.body
-  console.log("hasNewImage:", hasNewImage)
 
   Product.findByIdAndUpdate(id, payload)
   .then ((dbResponse) => sendClientResponse (dbResponse, res))
   .then((product) => deleteImage(product))
-  .then((res) => console.log("File delted", res))
-  .catch((err) => console.error ("probleme and updatin", err))
+  .then((res) => console.log("File deleted", res))
+  .catch((err) => console.error ("probleme and updating", err))
 }
 
 //Suppression de l'image
 function deleteImage (product){
- // const {imageUrl} = product
- // const fileToDelete = imageUrl.split("/").at(-1)
   if (product == null) return
   console.log("delete image", product)
   const imageToDelete = product.imageUrl.split("/").at(-1)  
@@ -92,7 +88,7 @@ function sendClientResponse (product, res){
     return res.status(404).send({message:"object not find in database"})
   } 
     console.log("all good to update:", product)
-    return Promise.resolve(res.status(200).send({message: "succesfully updated"})).then(() => product)
+    return Promise.resolve(res.status(200).send(product)).then(() => product)
 }
 
 function makeImageUrl(req, fileName) {
@@ -127,4 +123,50 @@ function createSauce(req, res) {
     .catch((err) => res.status(500).send(err))
 }
 
-module.exports = {getSauces, createSauce, getSauceById, deleteSauce, modifySauce}
+function likeSauce(req, res) {
+  const { like, userId } = req.body
+  if (![1, -1, 0].includes(like)) return res.status(403).send({ message: "Invalid like value" })
+
+  getSauce(req, res)
+    .then((product) => updateVote(product, like, userId, res))
+    .then((pr) => pr.save())
+    .then((prod) => sendClientResponse(prod, res))
+    .catch((err) => res.status(500).send(err))
+}
+
+function updateVote(product, like, userId, res) {
+  if (like === 1 || like === -1) return incrementVote(product, userId, like)
+  return resetVote(product, userId, res)
+}
+
+function resetVote(product, userId, res) {
+  const { usersLiked, usersDisliked } = product
+  if ([usersLiked, usersDisliked].every((arr) => arr.includes(userId)))
+    return Promise.reject("User seems to have voted both ways")
+
+  if (![usersLiked, usersDisliked].some((arr) => arr.includes(userId)))
+    return Promise.reject("User seems to not have voted")
+
+  if (usersLiked.includes(userId)) {
+    --product.likes
+    product.usersLiked = product.usersLiked.filter((id) => id !== userId)
+  } else {
+    --product.dislikes
+    product.usersDisliked = product.usersDisliked.filter((id) => id !== userId)
+  }
+
+  return product
+}
+
+function incrementVote(product, userId, like) {
+  const { usersLiked, usersDisliked } = product
+
+  const votersArray = like === 1 ? usersLiked : usersDisliked
+  if (votersArray.includes(userId)) return product
+  votersArray.push(userId)
+
+  like === 1 ? ++product.likes : ++product.dislikes
+  return product
+}
+
+module.exports = { sendClientResponse, getSauce, getSauces, createSauce, getSauceById, deleteSauce, modifySauce, likeSauce }
