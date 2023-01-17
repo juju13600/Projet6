@@ -23,12 +23,12 @@ function getSauces(req, res) {
   .then((products)=> res.send(products))
   .catch((error) => res.status (500).send(error))
 }
-//Afficher une seule sauce
+//Chercher la sauce par l'id
 function getSauce(req, res) {
   const { id } = req.params
   return Product.findById(id)
 }
-//Création de la fiche produit de la sauce
+//Renvoie vers la fiche de la sauce
 function getSauceById (req, res){
   getSauce (req,res)
   .then ((product) => sendClientResponse(product, res))
@@ -85,7 +85,7 @@ function makePayload (hasNewImage, req) {
 // Fonction réponse au client en fonction de la base de données
 function sendClientResponse (product, res){
   if (product == null) {
-    console.log("nothin to update")
+    console.log("nothing to update")
     return res.status(404).send({message:"object not find in database"})
   } 
     console.log("all good to update:", product)

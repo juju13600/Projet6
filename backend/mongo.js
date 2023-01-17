@@ -16,7 +16,7 @@ mongoose
 .then(() =>  console.log("connected"))
 .catch((err) => console.error ("error connected", err)) 
 
-//Shéma de connexion de l'uitlisateur
+//Shéma de connexion de l'utilisateur
 const userShema = new mongoose.Schema({
     email: { type: String, required: true, unique: true},
     password: { type: String, required: true}
