@@ -75,7 +75,7 @@ function deleteImage (product){
 function makePayload (hasNewImage, req) {
   console.log("hasNewImage:", hasNewImage)
   if (!hasNewImage) return req.body
-  const payload = JSON.parse (req.body.sauce)
+  const payload = JSON.parse(req.body.sauce)
   payload.imageUrl = makeImageUrl (req, req.file.fileName)
   console.log("nouvelle image à gérer")
   console.log("voici le payload:", payload)
@@ -99,9 +99,9 @@ function makeImageUrl(req, fileName) {
 
 //Création du produit sauce à partir du shéma
 function createSauce(req, res) {
-  const {body, file} = req
-  const sauce = JSON.parse(req.body.sauce)
+  const {body, file} = req  
   const {fileName} = file
+  const sauce = JSON.parse(body.sauce)
   const {name, manufacturer, description, mainPepper, heat, userId } = sauce
 
  

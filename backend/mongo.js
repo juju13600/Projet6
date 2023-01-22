@@ -1,5 +1,6 @@
 const  mongoose  = require("mongoose");
 const uniqueValidator = require("mongoose-unique-validator")
+const mongodbErrorHandler = require('mongoose-mongodb-errors')
 
 //Définition des informations confidentielles
 const password = process.env.DB_PASSWORD
@@ -9,6 +10,7 @@ const uri = `mongodb+srv://${username}:${password}@cluster0.kxysytv.mongodb.net/
 
 console.log("mot de passe de Mono: ", process.env.DB_PASSWORD)
 mongoose.set("strictQuery",true);
+mongoose.plugin(mongodbErrorHandler);
 
 //Connexion à mongoose
 mongoose
@@ -24,6 +26,7 @@ const userShema = new mongoose.Schema({
 
 //Chaque utilisateur à un email unique
 userShema.plugin(uniqueValidator)
+
 
 const User = mongoose.model("User", userShema)
 
